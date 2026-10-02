@@ -1,178 +1,201 @@
 # Hospital Readmission & Patient Flow Analytics
 
-**End-to-end hospital operations dashboard built with SQL Server, Python, and Power BI**
-
-## Live Dashboard
-
-**[View Interactive Dashboard →](ADD_POWER_BI_SERVICE_LINK_HERE)**
-
-Published via Power BI Service — no login required, fully interactive.
-
-![Dashboard Preview](Screenshots/page1_executive_overview.png)
+A comprehensive healthcare analytics portfolio project analyzing 30-day hospital readmission drivers, patient flow dynamics, and cost concentration across 9,093 hospital encounters.
 
 ---
 
-## Business Problem
+## 📌 Project Overview
 
-Hospitals lose money and quality-of-care ratings when patients are readmitted within 30 days of discharge. Without structured analysis, care teams have no clear view of:
+Hospital readmissions within 30 days of discharge impact patient health outcomes and strain healthcare financial resources. This project explores inpatient care patterns, length of stay (LOS), patient demographic profiles, and financial liability across a synthetic hospital dataset representing a multispecialty facility in Gurugram (Delhi-NCR) for FY 2024–25.
 
-- Which diagnosis categories and patient segments carry the highest readmission risk
-- Whether shorter stays (early discharge) or longer stays (sicker patients to begin with) predict a comeback
-- Whether out-of-pocket cost burden affects readmission — a genuine access-to-care question in an Indian hospital setting
-- Whether a small group of repeat patients accounts for a disproportionate share of hospital cost
-- Whether a simple, transparent score could flag high-risk patients at the point of discharge
-
-Without this, discharge planning stays reactive — the same high-risk patients keep coming back, and there's no data to prioritize follow-up care for the people who actually need it.
+By combining **Python** (synthetic data generation, data hygiene, and exploratory data analysis), **SQL Server** (relational schemas, window functions, and business queries), and **Power BI** (star-schema modeling, DAX measures, and interactive reporting), this project provides actionable visibility into high-risk clinical segments and operational cost drivers to support targeted discharge planning and bed management.
 
 ---
 
-## Solution
+## 🎯 Business Problem
 
-An analytics build covering 9,093 hospital encounters over one financial year (FY 2024-25) at a Delhi-NCR (National Capital Region) tertiary care hospital, tracing which patients, conditions, and care patterns actually drive 30-day readmission — checked and cross-matched across SQL, Python, and Power BI so the same numbers show up everywhere.
+Without structured operational and clinical analytics, hospital administrators and discharge coordination teams face critical challenges:
 
-**What the dashboard shows:**
-- 30-day readmission rate by diagnosis category, age group, and length of stay (LOS)
-- Out-of-pocket (OOP — the portion of the bill the patient pays themselves) cost burden by insurance type, and how it relates to readmission
-- A transparent 5-factor risk score that separates low-risk from high-risk patients
-- The "frequent flyer" segment — a small group of repeat patients driving a large share of cost
-- A confirmed link between medication count and comorbidity (multiple existing conditions) burden
-
----
-
-## Tech Stack
-
-| Tool | Purpose |
-|------|---------|
-| Python (Pandas, NumPy, Matplotlib, Seaborn) | Dataset build, data quality checks, EDA (exploratory data analysis), correlation analysis |
-| SQL Server | Business-question queries — window functions, self-joins, CTEs (common table expressions) |
-| Power BI (DAX) | Interactive 2-page dashboard |
+- **Unidentified Readmission Drivers:** Lack of visibility into which diagnosis categories, age segments, and clinical complexities correlate most strongly with 30-day bounce-backs.
+- **Patient Flow & Stay Duration:** Determining whether premature discharge (short stays) or elevated clinical acuity (extended stays) drives readmissions, and quantifying the associated bed-day utilization.
+- **Financial & Out-of-Pocket Burden:** Understanding how out-of-pocket (OOP) payment burden varies across health coverage programs (PMJAY, CGHS, Private Insurance, Self-pay) and assessing its relationship with follow-up adherence and return visits.
+- **Cost Concentration:** Evaluating whether a small subset of repeat encounters ("frequent flyers") accounts for a disproportionate share of total inpatient billing.
+- **Actionable Risk Stratification:** Establishing a simple, transparent risk-scoring heuristic at discharge to prioritize post-discharge interventions without requiring black-box architectures.
 
 ---
 
-## Dataset
-
-No public, patient-level Indian hospital readmission dataset exists at usable scale — checked data.gov.in, PMJAY (Pradhan Mantri Jan Arogya Yojana, India's public health insurance scheme) claims data, NFHS (National Family Health Survey), and ICMR (Indian Council of Medical Research) publications. What's published is hospital-level summary statistics in research papers, not row-level data anyone can download.
-
-So this dataset was built from scratch, calibrated against those same published Indian sources rather than pulled off Kaggle or randomized column-by-column.
-
-**3 tables, 9,093 encounters:**
-
-| Table | Rows | Description |
-|-------|------|-------------|
-| encounters_features_powerbi | 9,093 | Core fact table — one row per hospital stay |
-| patients | 7,500 | Patient demographics, city/state, insurance type |
-| doctors | 39 | Doctor details across 6 departments |
-
-**How it was calibrated:**
-- Diagnosis mix weighted to India's actual inpatient disease-burden ordering (Cardiovascular > Diabetes > Respiratory > Maternal & Neonatal > CKD, Chronic Kidney Disease > Surgical), based on ICMR disease-burden data
-- Respiratory admissions weighted higher October–February, matching NCR's winter AQI (Air Quality Index)-driven admission spike
-- Cardiovascular self-pay out-of-pocket costs calibrated to a median around ₹1.3 lakh, in line with the ₹1.15–1.72 lakh range reported in a published Indian tertiary-hospital cost study
-- OOP burden scaled by insurance type: PMJAY ~2–3%, CGHS (Central Government Health Scheme) ~10%, Private Insurance ~25–30%, Self-pay 100%
-- Readmission outcomes are driven by a risk model built on age, comorbidity count, medication count, LOS, insurance type, and discharge disposition — not assigned at random
-- A small "frequent flyer" tail (patients with 3 admissions in the year) shows up concentrated in elderly, high-comorbidity chronic patients
-- Overall 30-day readmission rate: 17.5%, ranging from 25.2% (CKD) down to 5.1% (Maternal & Neonatal)
-
-This is a custom-built dataset representing a fictional hospital, not real patient records — the calibration anchors come from a handful of published single-hospital Indian studies, so treat them as directional rather than a validated national benchmark.
-
----
-
-## Project Structure
+## 🏥 Solution Workflow
 
 ```
-hospital-readmission-patient-flow-analytics/
-├── data/
-│   ├── doctors.csv
-│   ├── encounters.csv
-│   ├── encounters_features_powerbi.csv
-│   └── patients.csv
-├── sql/
-│   ├── 01_create_tables.sql
-│   └── 02_business_questions.sql
-├── python/
-│   ├── eda.py
-│   └── generate_data.py
-├── powerbi/
-│   └── hospital-readmission-patient-flow-analytics.pbix
-├── Screenshots/
-│   ├── page1_executive_overview.png
-│   └── page2_risk_drivers.png
-└── README.md
+Synthetic Inpatient Dataset (calibrated to Indian healthcare benchmarks)
+                               ↓
+        Python Data Generation & Preprocessing (generate_data.py)
+                               ↓
+       Python Data Quality Checks, EDA & Feature Engineering (eda.py)
+                               ↓
+               Relational Modeling & SQL Analytics
+     (01_create_tables.sql  |  02_business_questions.sql)
+                               ↓
+                 Power BI Relational Data Model
+                               ↓
+                   DAX Measure Development
+                               ↓
+        Interactive 2-Page Executive & Risk Driver Dashboard
+                               ↓
+      Operational Insights & Targeted Discharge Recommendations
 ```
 
 ---
 
-## Python EDA
+## 🛠️ Tech Stack
 
-`python/eda.py` handles data quality checks, feature engineering, distributions, and a correlation check across the encounter-level features. Two things worth calling out:
-
-- Prior-admission count per patient (rolling 365-day window) was rebuilt independently in Python using a sorted time-window loop, as a check against the same logic built in SQL — both landed on identical patient counts (7,500 / 1,311 / 282 with 0 / 1 / 2 prior admissions).
-- Medication count and comorbidity count correlate at **r = 0.73** — a strong relationship, confirming that medication complexity mostly reflects how many existing conditions a patient has, rather than acting as its own separate readmission driver.
-
-`python/generate_data.py` builds the underlying dataset using the calibration described above.
-
----
-
-## Dashboard — 2 Pages
-
-### Page 1 — Executive Overview
-
-![Page 1](Screenshots/page1_executive_overview.png)
-
-**KPI Cards:** Total Discharges · Readmission Rate % · Avg LOS · Total Cost · OOP % of Bill
-
-**Visuals:**
-- Readmission Rate by Diagnosis Category — CKD and Cardiovascular highest at ~25%, Maternal & Neonatal lowest at 5.1%
-- Monthly Discharge & Readmission Trend — the visible dip in March is a data-window effect (late-March discharges simply don't have 30 full days left in the year to be captured as a readmission), noted directly on the chart rather than left to look like a real trend
-- Insurance Type Mix — OOP % vs Readmission — Self-pay patients carry 100% of their own bill and show the highest readmission rate
-- Readmission Rate & Avg Bill by Length-of-Stay Bucket — both readmission risk and cost rise together as stays get longer
-- Department Summary Table — department rates line up exactly with diagnosis category, confirming the doctor-department join is clean
+| Technology | Usage |
+|---|---|
+| **Python** | Data simulation, pipeline orchestration, exploratory data analysis |
+| **Pandas** | Tabular data manipulation, time-window aggregations, data profiling |
+| **NumPy** | Statistical distributions (Gamma, Poisson, Normal), vector calculations, sigmoid probability formulation |
+| **Matplotlib** | Static visualization of feature distributions and analytical checks |
+| **Sebaron** | Statistical graphics, bivariate driver plots, and correlation heatmaps |
+| **SQL Server** | Relational data storage and querying (tested via DBeaver / SSMS) |
+| **SQL** | Schemas (DDL), aggregations, multi-table JOINs, self-joins, CTEs, and window functions (`LAG`, stacked window aggregates) |
+| **Power BI** | Data modeling, interactive 2-page operational dashboard design |
+| **DAX** | Calculated measures, filtering logic, and custom KPI metrics |
+| **Git / GitHub** | Version control and portfolio presentation |
 
 ---
 
-### Page 2 — Risk Drivers & High-Risk Segments
+## 📊 Dataset
 
-![Page 2](Screenshots/page2_risk_drivers.png)
+Because row-level Indian hospital inpatient readmission records are not publicly accessible due to regulatory and confidentiality protections, the dataset for this project was **synthetically generated from scratch** via `python/generate_data.py`. Parameters were calibrated against published Indian healthcare studies (such as ICMR disease-burden reports and published Indian tertiary-care hospital cost studies).
 
-**KPI Cards:** Total High-Risk Encounters · High-Risk Readmission Rate % · Frequent Flyer Cost Share % · LAMA (Left Against Medical Advice) vs Routine Uplift (percentage points)
+- **Encounters (`encounters` / `encounters_features_powerbi`):** 9,093 inpatient stays across FY 2024–25 (April 1, 2024 – March 31, 2025)
+- **Patients (`patients`):** 7,500 unique patient demographic records (1,311 patients with 1 prior admission; 282 with 2 prior admissions within rolling 365 days)
+- **Doctors (`doctors`):** 39 physicians distributed across 6 specialized hospital departments
+- **Core Clinical Categories:** Cardiovascular (Cardiology), Diabetes (Endocrinology), Respiratory (Pulmonology), Chronic Kidney Disease / CKD (Nephrology), Maternal & Neonatal (Obstetrics & Gynaecology), and Surgical (General Surgery)
+- **Key Attributes:** `encounter_id`, `patient_id`, `doctor_id`, `diagnosis_category`, `icd10_code`, `icd10_description`, `admission_date`, `discharge_date`, `los_days`, `comorbidity_count`, `num_medications`, `num_procedures`, `discharge_disposition`, `total_bill_inr`, `oop_amount_inr`, `is_readmission`, `readmitted_within_30d`
 
-**Visuals:**
-- Readmission Rate by Age Bucket — the cleanest single driver in the project: a steady climb from 4.4% (under 18) to 32.5% (75+)
-- Readmission Rate by Medication Complexity — the largest spread between buckets (5.9% → 29.1%), though this tracks comorbidity burden closely rather than acting on its own
-- Readmission Rate by Composite Risk Tier — Low (9.9%) to High (26.6%), with most of the separation happening between Low and Medium rather than Medium and High
-- Discharge Disposition Impact on Readmission — patients discharged LAMA show a real but modest increase in readmission versus a Routine discharge
-- Frequent-Flyer Patients: Share of Volume vs Cost — patients with 2+ encounters make up 17.5% of the patient base but 37.4% of total cost
-
----
-
-## Key Findings
-
-| Finding | Value | Business Implication |
-|---------|-------|---------------------|
-| Overall 30-day readmission rate | 17.5% | Roughly 1 in 6 discharges comes back within a month |
-| Highest-risk category | CKD, 25.2% | Nephrology discharge planning needs the most reinforcement |
-| Lowest-risk category | Maternal & Neonatal, 5.1% | Acute, non-chronic care — the least readmission-prone segment |
-| Age is the cleanest single driver | 4.4% (under 18) → 32.5% (75+) | Age alone is a strong discharge-planning signal, before any other factor is considered |
-| Length of stay predicts both readmission and cost | 10.2% → 28.7% rate, roughly 4x cost increase | Extended stays are a quality issue and a cost issue together |
-| Self-pay patients | 100% OOP, 19.2% readmission (highest) | Points to cost-driven early discharge and weaker follow-up affordability |
-| Doctor-level variation | Small, consistent with sampling noise | Worth stating as a limitation — doctor assignment wasn't a factor in the underlying risk model |
-| Medication complexity vs comorbidity | r = 0.73 | The biggest single spread in the project turns out to be a proxy for comorbidity, not an independent driver |
-| Frequent-flyer cost concentration | 17.5% of patients → 37.4% of cost | A small, identifiable group is worth targeted discharge-planning attention |
-| Composite risk score | Low 9.9% → High 26.6% | A simple, explainable scoring system separates risk meaningfully, especially between Low and Medium |
+> **Note on Data Privacy:** All raw patient-level CSV files (`data/*.csv`) are strictly excluded from the public repository using `.gitignore`. The project contains solely reproducible generator code, analytical queries, dashboard definitions, screenshots, and summary documentation.
 
 ---
 
-## DAX Measures
+## 🔍 Key Business Questions
 
-A few of the core measures, built in a dedicated `_Measures` table:
+### Patient & Readmission Analysis
+- What is the baseline 30-day readmission rate across index hospital stays, and how does it fluctuate across medical specialties? *(SQL Q1)*
+- At what age threshold does 30-day readmission risk accelerate? *(SQL Q2)*
+- How does discharge disposition—specifically leaving against medical advice (LAMA) versus routine discharge—impact bounce-back likelihood? *(SQL Q6)*
 
-**Readmission Rate %**
-```
+### Patient Flow Analysis
+- Does hospital length of stay (LOS) correlate with heightened readmission rates and cumulative billing? *(SQL Q3)*
+- How are admission volumes and readmissions distributed across medical departments? *(SQL Q5a)*
+- What is the distribution of elapsed days between successive discharges and subsequent re-admissions? *(SQL Q9)*
+
+### Financial Analysis
+- What is the distribution of out-of-pocket (OOP) medical expenses across insurance categories (PMJAY, CGHS, Private Insurance, Self-pay), and how does that relate to readmission risk? *(SQL Q4)*
+- What proportion of total inpatient bed-days and hospital expenditure is driven by repeat/frequent-flyer patients? *(SQL Q10)*
+
+### Risk Analysis
+- Does medication volume independently drive readmission risk, or does it proxy chronic disease count? *(SQL Q7, Python correlation check)*
+- Can clinical, demographic, and behavioral factors be unified into a transparent, rule-based risk score to triage patients prior to discharge? *(SQL Q11, Python cross-validation)*
+
+---
+
+## 🐍 Python Analytics
+
+### `python/generate_data.py`
+Synthesizes the multi-table relational dataset:
+- Simulates realistic patient demographics across Delhi-NCR Tier-1 (Gurugram, Delhi, Noida, Faridabad, Ghaziabad) and Tier-2 referral hubs.
+- Assigns diagnosis categories weighted by national disease burdens, including seasonal respiratory multipliers matching winter AQI peaks (October–February).
+- Assigns ICD-10 codes, stay durations using Gamma distributions, comorbid conditions via Poisson distributions, and procedural costs calibrated to Indian private tertiary care standards.
+- Determines readmission probability via an underlying **sigmoid function** incorporating relative age, comorbidity counts, medication complexity, stay duration, insurance classification, and discharge disposition, including a multiplier for elderly chronic patients.
+
+### `python/eda.py`
+Executes data verification, feature engineering, and exploratory analytics:
+- **Data Quality & Integrity Audits:** Confirms absence of unexpected null values, validates primary key uniqueness (`patient_id`, `encounter_id`), verifies date sequencing (`discharge_date >= admission_date`), and checks categorical fields.
+- **Feature Engineering:**
+  - Standardized bucketing: `age_bucket`, `los_bucket`, and `med_bucket`.
+  - `prior_admissions_365d`: Computed through a sorted rolling 365-day time-window algorithm per patient, providing an independent Python verification of SQL self-join logic.
+  - `is_frequent_flyer`: Encodes patients recording $\ge 2$ hospitalizations.
+- **Statistical & Correlation Check:** Computes Pearson correlation matrix across numerical encounter attributes. Specifically isolates the relationship between `num_medications` and `comorbidity_count` ($r = 0.73$), proving medication count serves primarily as a surrogate for underlying comorbidity burden rather than an isolated risk driver.
+- **Rule-Based Risk Score Validation:** Implements Python computation of the heuristic risk index to confirm exact alignment with SQL results.
+- **Visual Artifacts:** Generates diagnostic plots saved in `eda_charts/` (`01_univariate_distributions.png`, `02_readmission_drivers.png`, `03_confounding_check.png`, `04_frequent_flyer_and_risk_tiers.png`).
+
+---
+
+## 🗄️ SQL Analysis
+
+The SQL implementation comprises foundational database creation and 11 focused analytical queries executed against SQL Server:
+
+- **`sql/01_create_tables.sql`:** Explicit DDL script creating `doctors`, `patients`, and `encounters` tables with strict data typing (`VARCHAR` identifiers, `DATE` types, `NUMERIC` currencies, and foreign key relations) to eliminate import parsing errors.
+- **`sql/02_business_questions.sql`:**
+  - **Aggregations & Groupings:** Baseline readmission rates across diagnosis categories and departments with defensive `HAVING` filters (Q1, Q5a, Q5b).
+  - **Conditional Categorization (`CASE WHEN`):** Segmenting age brackets, length of stay cohorts, medication complexity bands, and composite risk tiers (Q2, Q3, Q7, Q11).
+  - **Relational JOINs:** Multi-table joins uniting patient demographics and physician specialties with encounter details (Q2, Q4, Q5a, Q5b, Q11).
+  - **Self-Joins:** Multi-row historical event joins matching preceding admissions within rolling 365-day intervals for the same patient (`LEFT JOIN encounters e2 ON e1.patient_id = e2.patient_id AND e2.admission_date < e1.admission_date AND e2.admission_date >= DATEADD(DAY, -365, e1.admission_date)`) (Q8, Q11).
+  - **Window Functions:**
+    - `LAG(discharge_date) OVER (PARTITION BY patient_id ORDER BY admission_date)` paired with `DATEDIFF()` to compute exact elapsed days between consecutive admissions (Q9).
+    - Stacked window expressions `CAST(SUM(total_cost_inr) AS FLOAT) / SUM(SUM(total_cost_inr)) OVER () * 100` to evaluate relative volume and financial contributions without collapsing aggregate rows (Q10).
+  - **Common Table Expressions (CTEs):** Multi-stage modular queries computing intermediate patient metrics and multi-factor risk scores (Q10, Q11).
+
+---
+
+## 📈 Power BI Dashboard
+
+The Power BI reporting model (`powerbi/hospital-readmission-patient-flow-analytics.pbix`) is organized into two dedicated reporting views:
+
+### Page 1: Executive Overview
+
+![Executive Overview Dashboard](Screenshots/page1_executive_overview.png)
+
+- **Core Purpose:** High-level executive monitoring of hospital discharge volume, readmission incidence, inpatient stay duration, and financial collections.
+- **Key KPI Cards:**
+  - Total Discharges (Index hospital stays)
+  - Readmission Rate %
+  - Average Length of Stay (Days)
+  - Total Inpatient Cost (INR)
+  - Out-of-Pocket (OOP) % of Bill
+- **Primary Visuals:**
+  - *Readmission Rate by Diagnosis Category:* Visualizes readmission incidence by clinical specialty, highlighting elevated rates in Chronic Kidney Disease (CKD) and Cardiovascular conditions versus Maternal & Neonatal care.
+  - *Monthly Discharge & Readmission Trend:* Tracks monthly inpatient volumes across FY 2024–25; explicitly annotates the March volume dip as an analytical boundary effect (short follow-up window) rather than clinical performance change.
+  - *Insurance Type Mix (OOP % vs Readmission Rate):* Evaluates self-pay burden versus institutional coverage and its correlation with readmissions.
+  - *Readmission Rate & Average Bill by Length-of-Stay Bucket:* Illustrates concurrent escalation in patient cost and readmission risk as hospitalization duration expands.
+  - *Department Summary Grid:* Displays doctor count, discharge volume, readmission frequency, and percentage rates across hospital specialties.
+
+---
+
+### Page 2: Risk Drivers & High-Risk Segments
+
+![Risk Drivers Dashboard](Screenshots/page2_risk_drivers.png)
+
+- **Core Purpose:** In-depth clinical and operational risk segmentation to inform post-discharge follow-up protocols.
+- **Key KPI Cards:**
+  - Total High-Risk Encounters
+  - High-Risk Readmission Rate %
+  - Frequent Flyer Cost Share %
+  - LAMA vs Routine Readmission Rate Uplift (percentage points)
+- **Primary Visuals:**
+  - *Readmission Rate by Age Bucket:* Tracks readmission progression across age bands, demonstrating monotonic risk escalation from pediatric patients to elderly cohorts ($75+$).
+  - *Readmission Rate by Medication Complexity:* Contrasts readmission outcomes across medication volume bands (Low to Polypharmacy).
+  - *Readmission Rate by Composite Risk Tier:* Validates risk tier stratification across Low, Medium, and High scoring categories.
+  - *Discharge Disposition Impact:* Details readmission variance between standard discharges and patients leaving against medical advice (LAMA).
+  - *Frequent-Flyer Patient Analysis (Volume vs. Cost):* Highlights the disproportionate resource utilization of repeat patients ($2+$ visits).
+
+---
+
+## 🧮 KPI & DAX Analysis
+
+Measures are isolated within a dedicated `_Measures` table in Power BI to ensure clean data architecture. Key DAX implementations include:
+
+#### 1. Readmission Rate %
+Quantifies the share of qualifying index stays followed by a return admission within 30 days:
+```dax
 Readmission Rate % =
 DIVIDE([Readmitted Count], [Total Discharges]) * 100
 ```
 
-**Total Discharges** (index stays only — the readmission-outcome filter lives inside the measure itself, not as a page-level filter, so a slicer can't accidentally hide it)
-```
+#### 2. Total Discharges (Index Stays)
+Restricts denominator calculations to initial index encounters to prevent mathematical distortions from chained readmissions:
+```dax
 Total Discharges =
 CALCULATE(
     COUNTROWS(encounters_features_powerbi),
@@ -180,8 +203,9 @@ CALCULATE(
 )
 ```
 
-**Frequent Flyer Cost Share %**
-```
+#### 3. Frequent Flyer Cost Share %
+Calculates the proportion of total hospital financial turnover attributed to patients with multiple hospitalizations:
+```dax
 Frequent Flyer Cost Share % =
 DIVIDE(
     CALCULATE([Total Cost], encounters_features_powerbi[is_frequent_flyer] = TRUE),
@@ -189,8 +213,9 @@ DIVIDE(
 ) * 100
 ```
 
-**Composite Risk Score**
-```
+#### 4. Composite Risk Score (Calculated Column / Measure Logic)
+Replicates the 5-factor point heuristic directly within Power BI:
+```dax
 RiskPoints =
 VAR a = RELATED(patients[age])
 VAR c = encounters_features_powerbi[comorbidity_count]
@@ -207,51 +232,175 @@ RETURN
 
 ---
 
-## How to Run
+## ⚠️ Risk Analysis
 
-**Regenerate the dataset (optional — the CSVs in `data/` are already built):**
-1. `pip install pandas numpy`
-2. `python python/generate_data.py` — builds `patients.csv`, `doctors.csv`, `encounters.csv`
-3. `python python/eda.py` — builds `encounters_features_powerbi.csv`
+The risk assessment methodology utilized in this project is an explicit **rule-based risk score (heuristic point model)**.
 
-**SQL setup:**
-1. Open SQL Server Management Studio
-2. Import the CSVs from `data/` using the Import Flat File wizard (Tasks → Import Flat File)
-3. Import order: doctors → patients → encounters_features_powerbi
-4. Run `sql/01_create_tables.sql`, then `sql/02_business_questions.sql`
+> **Methodology Notice:** This score is **not** an artificial intelligence, machine learning, or predictive regression model. Weights represent reasoned operational heuristic points assigned across observable clinical and demographic indicators:
 
-**Power BI:**
-1. Open `powerbi/hospital-readmission-patient-flow-analytics.pbix`
-2. Home → Transform Data → Data Source Settings → point to your local `data/` folder
-3. Refresh
+| Factor | Condition | Assigned Points |
+|---|---|---|
+| **Age** | $\ge 75$ years<br>$61 - 74$ years | $+2$<br>$+1$ |
+| **Comorbidity Burden** | $\ge 3$ conditions<br>$2$ conditions | $+2$<br>$+1$ |
+| **Prior Hospitalization** | $\ge 1$ admission within preceding 365 days | $+2$ |
+| **Payer Category** | Self-pay (100% Out-of-pocket) | $+1$ |
+| **Discharge Type** | Left Against Medical Advice (LAMA) | $+1$ |
 
-**Or skip setup entirely:**
-[Live Dashboard on Power BI Service](ADD_POWER_BI_SERVICE_LINK_HERE)
+**Empirical Risk Tier Validation (Index Admissions):**
+- **Low Risk (0–1 pts):** ~9.9% Readmission Rate
+- **Medium Risk (2–3 pts):** ~21.2% Readmission Rate
+- **High Risk (4+ pts):** ~26.6% Readmission Rate
 
----
-
-## Why This Project
-
-Most fresher analytics portfolios lean on the same generic Kaggle US diabetes readmission dataset. This one is built around Indian healthcare instead — Indian disease-burden weighting, Indian out-of-pocket cost benchmarks, Indian insurance types and city/hospital context — after confirming no usable real Indian patient-level dataset exists publicly.
-
-The same two results (prior-admission count, composite risk score) were independently worked out in both SQL and Python, using different techniques each time, and landed on identical numbers — a real check that the underlying logic holds up, not just two versions of the same calculation.
+*Analytical Takeaway:* The scoring mechanism effectively distinguishes low-risk individuals from elevated-risk groups (separating 9.9% from 21.2%), though it exhibits less separation between medium and high-risk tiers.
 
 ---
 
-## About
+## 💡 Key Insights
 
-Built as part of an independent data analytics portfolio to demonstrate end-to-end DA (data analyst) skills — dataset design grounded in real healthcare statistics, SQL, Python EDA, and Power BI dashboard development.
+*Note: Observations are derived directly from the project's calibrated dataset.*
 
-**Tools:** SQL Server · Power BI · DAX · Python · Pandas · NumPy · Matplotlib · Seaborn
+- **Insight:** Inpatient readmission risk increases consistently with patient age.  
+  **Evidence:** Readmissions rise monotonically from 4.4% for patients under 18 to 32.5% for patients aged 75 and older (SQL Q2, Power BI Page 2).  
+  **Business Implication:** Advanced age serves as an immediate, clear baseline indicator for post-discharge touchpoints and medication reconciliation.
 
-**Domain:** Healthcare Analytics · Hospital Operations · Readmission Risk
+- **Insight:** Chronic Kidney Disease (CKD) and Cardiovascular conditions exhibit the highest bounce-back rates.  
+  **Evidence:** CKD records a 25.2% readmission rate, followed closely by Cardiovascular conditions (~23.5%), whereas Maternal & Neonatal care records 5.1% (SQL Q1, Power BI Page 1).  
+  **Business Implication:** Clinical discharge planning protocols yield the greatest return on investment when centered on nephrology and cardiology wards.
 
-**Connect:** [LinkedIn](https://www.linkedin.com/in/pratikshadandriyal) · [GitHub](https://github.com/pratikshadandriyal)
+- **Insight:** Extended hospital stays mirror higher readmission vulnerability and steeper treatment costs.  
+  **Evidence:** Patients staying 11+ days face a 28.7% readmission rate and an average bill exceeding ₹1,00,000, compared to 10.2% for 1–2 day stays (SQL Q3).  
+  **Business Implication:** Long-stay patients represent both a quality-of-care vulnerability and financial exposure, justifying dedicated discharge navigation.
+
+- **Insight:** Self-pay patients carry full financial liability and exhibit elevated readmission frequency.  
+  **Evidence:** Self-pay encounters carry 100% out-of-pocket burden and the highest category readmission rate at 19.2% (SQL Q4).  
+  **Business Implication:** High personal expense burdens may hinder outpatient pharmaceutical compliance, suggesting the value of post-discharge cost counseling.
+
+- **Insight:** Repeat patients drive a disproportionate share of aggregate hospital expenses.  
+  **Evidence:** Patients with 2 or more admissions represent 17.5% of unique patients but generate 37.4% of total billing (SQL Q10, Power BI Page 2).  
+  **Business Implication:** Implementing outpatient chronic disease monitoring for frequent flyers can significantly stabilize hospital resource utilization.
+
+- **Insight:** Medication complexity proxies underlying chronic disease counts rather than functioning as an isolated cause.  
+  **Evidence:** Correlation between medication count and comorbidity count is $r = 0.73$ (Python EDA `03_confounding_check.png`).  
+  **Business Implication:** Discharge planning should target overall patient complexity rather than focusing solely on prescription volume.
 
 ---
 
-## Other Projects
+## 💼 Business Recommendations
 
-- [Helpdesk Performance & SLA Analytics](https://github.com/pratikshadandriyal/Helpdesk-Performance-SLA-Analytics) — SQL Server + Power BI + Python, 8,000+ tickets, SLA (Service Level Agreement) breach and agent workload analysis
-- [SaaS Product Analytics Dashboard](https://github.com/pratikshadandriyal/SaaS-Product-Analytics-Dashboard) — SQL Server + Power BI + Python, 45,000+ records, churn and feature adoption analysis
-- [AI Job Displacement Dashboard](https://github.com/pratikshadandriyal/AI-Job-Displacement-Reskilling-Dashboard) — Power BI, 13,700+ job records across 9 countries
+1. **Targeted Nephrology and Cardiology Discharge Follow-Ups:** Formulate specialized discharge protocols (e.g., 48-hour follow-up telephone calls, scheduled outpatient nephrology reviews within 7 days) for CKD and cardiac patients.
+2. **Dedicated Care Management for "Frequent Flyers":** Establish a patient navigator program focused on individuals with 2+ annual hospitalizations to oversee outpatient management and reduce avoidable bed-day consumption.
+3. **Structured Counseling for At-Risk Discharges (LAMA):** Implement formal clinical and financial counseling whenever a patient requests discharge against medical advice, addressing financial anxiety to avoid premature departure.
+4. **Automated Discharge Risk Triage:** Incorporate the 5-factor rule-based risk score into the Electronic Health Record (EHR) discharge summary to trigger automated follow-up workflows for patients scoring $\ge 2$ points.
+5. **Post-Discharge Support for Self-Pay Cohorts:** Connect self-pay patients with generic medication alternatives and affordable outpatient follow-up packages to curb compliance-related readmissions.
+
+---
+
+## 📁 Project Structure
+
+```
+Hospital-Readmission-Patient-Flow-Analytics/
+├── .gitignore
+├── README.md
+├── Screenshots/
+│   ├── page1_executive_overview.png
+│   └── page2_risk_drivers.png
+├── powerbi/
+│   └── hospital-readmission-patient-flow-analytics.pbix
+├── python/
+│   ├── eda.py
+│   └── generate_data.py
+└── sql/
+    ├── 01_create_tables.sql
+    └── 02_business_questions.sql
+```
+
+*(Note: The `data/` directory containing CSV extracts is maintained locally for reproducible pipeline execution and excluded from public version control via `.gitignore`.)*
+
+---
+
+## 🚀 How to Run
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/tanyaverma20/Hospital-Readmission-Patient-Flow-Analytics.git
+cd Hospital-Readmission-Patient-Flow-Analytics
+```
+
+### 2. Configure Python Environment
+Install required dependencies:
+```bash
+pip install pandas numpy matplotlib seaborn
+```
+
+### 3. Generate Inpatient Dataset
+Execute data generation script to produce synthetic CSV tables:
+```bash
+python python/generate_data.py
+```
+*Creates: `patients.csv`, `doctors.csv`, and `encounters.csv`.*
+
+### 4. Execute Feature Engineering & EDA
+Run feature extraction and cross-validation pipelines:
+```bash
+python python/eda.py
+```
+*Validates data quality, runs correlation checks, saves visualization charts to `eda_charts/`, and outputs `encounters_features.csv`.*
+
+### 5. Execute SQL Analytics
+1. Connect to SQL Server using your preferred client (DBeaver, Azure Data Studio, or SSMS).
+2. Execute `sql/01_create_tables.sql` to establish strict schemas.
+3. Import `doctors.csv`, `patients.csv`, and `encounters.csv` (ensure ID fields are assigned as `VARCHAR`).
+4. Run `sql/02_business_questions.sql` to generate insights for business questions Q1 through Q11.
+
+### 6. Explore Power BI Dashboard
+1. Open `powerbi/hospital-readmission-patient-flow-analytics.pbix` in Power BI Desktop.
+2. If prompted, navigate to **Home → Transform Data → Data Source Settings** and update the folder path to your local directory.
+3. Click **Refresh** to reload visuals.
+
+---
+
+## 🔐 Data Privacy
+
+- **No Protected Health Information (PHI):** All data utilized in this project is completely synthetic and generated algorithmically. No real patient identities, confidential medical histories, or proprietary hospital records are included.
+- **Repository Hygiene:** All raw CSV files (`data/*.csv`) are omitted from public GitHub tracking via explicit `.gitignore` rules to maintain clean repository standards and comply with healthcare data privacy best practices.
+
+---
+
+## 🔮 Future Improvements
+
+*(Proposed future enhancements — not currently implemented in the codebase)*
+
+- **Machine Learning Classification Models:** Evaluate logistic regression, random forests, and gradient boosting algorithms (e.g., XGBoost / LightGBM) to benchmark empirical feature weights against the current heuristic scoring rules.
+- **Model Explainability (SHAP):** Integrate SHAP (SHapley Additive exPlanations) values to explain patient-specific readmission risk drivers.
+- **Automated Gateway Refreshes:** Configure scheduled data refreshes via Power BI Service and enterprise gateway connections.
+- **Time-Series Census Forecasting:** Build predictive bed-occupancy forecasting models based on seasonal admission surges (e.g., winter respiratory peaks).
+- **Physician-Level Factor Modeling:** Incorporate clinical team assignments and staffing ratios into readmission modeling once sufficient clinical practice variations are simulated.
+
+---
+
+## 👩‍💻 About
+
+**Tanya Verma**  
+Computer Engineering student interested in Data Science, Data Analytics, Business Intelligence, and AI/GenAI.
+
+- **GitHub:** [@tanyaverma20](https://github.com/tanyaverma20)
+
+---
+
+## 🎓 Skills Demonstrated
+
+- **Data Analytics:** Data hygiene auditing, exploratory data analysis (EDA), feature engineering, cohort segmentation, healthcare operational KPI development.
+- **SQL:** Multi-table relational joins, self-joins for longitudinal tracking, Common Table Expressions (CTEs), window functions (`LAG`, partitioned aggregations, grand total windows), data type casting, and schema design.
+- **Power BI & Business Intelligence:** Relational star-schema data modeling, custom DAX measure development, interactive dashboard UI/UX design, and drill-down analytics.
+- **Python:** Data generation routines, parameterized distributions (Gamma, Poisson, Normal), vector calculations, correlation matrix evaluation, regression visualization (`matplotlib`, `seaborn`).
+- **Cross-Platform Verification:** Reproducible reconciliation of business metrics across SQL queries, Python scripts, and Power BI dashboards.
+
+---
+
+## ⭐ Portfolio Highlights
+
+- **End-to-End Analytics Workflow:** Comprehensive pipeline covering synthetic generation, statistical quality checks, SQL querying, and Power BI visualization.
+- **Independently Cross-Validated Metrics:** Rolling 365-day admission histories and composite risk tiers independently derived and reconciled across both SQL and Python.
+- **Advanced SQL Techniques:** Demonstrates practical mastery of self-joins, window functions (`LAG`), stacked aggregate windows, and modular CTEs.
+- **Pragmatic Healthcare Context:** Grounded in realistic Indian healthcare operational patterns, including seasonal respiratory surges, out-of-pocket payment burdens, and LAMA discharge patterns.
+- **Transparent, Grounded Methodology:** Distinguishes clearly between heuristic risk scoring and predictive machine learning models, ensuring high credibility for technical interview discussions.
